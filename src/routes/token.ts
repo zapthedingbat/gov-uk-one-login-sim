@@ -8,11 +8,13 @@ import { ITokenExchangeStore } from "../lib/TokenExchangeResponseStore";
 import { UrlResolver } from "../lib/UrlResolver";
 import { IPrivateKeyStore } from "../lib/KeyStore";
 import { TokenSet } from "../lib/types";
+import { IUserinfoStore } from "../lib/UserinfoStore";
 
 export default (
   clientConfigurations: IClientConfigurations,
   tokenExchangeStore: ITokenExchangeStore,
-  privateKeyStore: IPrivateKeyStore
+  privateKeyStore: IPrivateKeyStore,
+  userinfoStore: IUserinfoStore,
 ) =>
   AsyncHandler(async (req: Request, res: Response) => {
     const urlResolver = new UrlResolver(req);
@@ -79,7 +81,7 @@ export default (
         // This is a successful request
         // Return a token set
         if (!res.headersSent) {
-          const nonce = tokenExchange.testBehaviour === "NonceMismatch" ?  "invalid_nonce" : tokenExchange.authorizeRequestParameters.nonce!;
+          const nonce = tokenExchange.testBehaviour === "TokenExchangeNonceMismatch" ?  "invalid_nonce" : tokenExchange.authorizeRequestParameters.nonce!;
           const accessToken = await generateRandomString();
           const idTokenPrivateKey = privateKeyStore.getPrivateKey();
           const idToken = await generateIdToken({
@@ -87,7 +89,7 @@ export default (
             issuer: urlResolver.resolve("/"),
             keyAlg: idTokenPrivateKey.keyAlg,
             keyId: idTokenPrivateKey.keyId,
-            sub: tokenExchange.responseData.sub,
+            sub: "idtokensub",
             nonce: nonce,
             privateKey: idTokenPrivateKey.privateKey,
           });
@@ -96,6 +98,14 @@ export default (
             access_token: accessToken,
             id_token: idToken,
           };
+
+          userinfoStore.set(accessToken, {
+            testBehaviour: tokenExchange.testBehaviour,
+            responseData: {
+              sub: "userinfosub",// tokenExchange.responseData.sub
+            }
+          });
+
           res.json(tokenSet);
           // Set the userinfo details so they can be served
         }
@@ -170,11 +180,11 @@ async function generateIdToken(generateIdTokenParams: {
   };
   const claim = await new SignJWT(payload)
     .setAudience(audience)
-    .setExpirationTime(0)
+    .setExpirationTime("1h")
     .setIssuedAt(0)
     .setIssuer(issuer)
     .setJti(randomUUID())
-    .setNotBefore(0)
+    //.setNotBefore(0)
     .setProtectedHeader({ alg: keyAlg, kid: keyId })
     .setSubject(sub)
     .sign(privateKey);

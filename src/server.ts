@@ -90,7 +90,7 @@ import { IUserinfoStore } from "./lib/UserinfoStore";
   // OIDC token exchange
   app.post(
     "/token",
-    token(clientConfigurations, authorizeRequests, keyStore)
+    token(clientConfigurations, authorizeRequests, keyStore, userinfoStore)
   );
 
   // Serve the userinfo resource, protected by the access_token

@@ -10,31 +10,32 @@ export default (userinfoStore: IUserinfoStore, spotPrivateKeyInfo: PrivateKeyInf
 
     const authorizationHeader = req.header("Authorization");
     if(typeof authorizationHeader !== "string"){
-      // Tried to access the userinfo endpoint without an Authorization header. The header must be in the format 'Authorization: Bearer {access_token}'
-      throw new Error("401 Unauthorized");
+      req.log.error(`Tried to access the userinfo endpoint without an Authorization header. The header must be in the format 'Authorization: Bearer {access_token}'`);
+      res.sendStatus(401);
+      return;
     }
     const accessToken = authorizationHeader.replace(/^Bearer /i, "");
     const userInfo = userinfoStore.get(accessToken);
     if(typeof userInfo === "undefined"){
-      // The access token used for the userinfo endpoint wasn't valid. The header must be in the format 'Authorization: Bearer {access_token}'
-      throw new Error("401 Unauthorized");
+      req.log.error(`The access token used for the userinfo endpoint wasn't valid. The header must be in the format 'Authorization: Bearer {access_token}'`);
+      res.sendStatus(401);
+      return;
     }
 
-    const responseBehaviour = userInfo.responseBehaviour;
-    switch(responseBehaviour){
-      case "ServerError":
+    const testBehaviour = userInfo.testBehaviour;
+    switch(testBehaviour){
+      case "UserinfoServerError":
         res.sendStatus(500);
         break;
-      case "InvalidResourceJson":
+      case "UserinfoInvalidJson":
         res.send("<html><body>Not valid JSON");
         break;
     }
 
     const responseData = userInfo.responseData!;
-    const sub = responseData!.sub;
 
     const response:any = {
-      sub,
+      sub: responseData.sub,
       "updated_at": 0,// TODO: what should this be?
     };
 
@@ -49,10 +50,10 @@ export default (userinfoStore: IUserinfoStore, spotPrivateKeyInfo: PrivateKeyInf
     }
 
     if(typeof responseData.coreIdentity === "object"){
-      const sub = "foo";
-      const issuer = responseBehaviour === "InvalidIssuer" ? "invalid-issuer" : responseData.coreIdentity.issuer;
-      const aud = responseBehaviour === "InvalidAudience" ? "invalid-aud" : responseData.coreIdentity.aud;
-      const vot = responseBehaviour === "ZeroVot" ? "P0" : responseData.coreIdentity.vot;
+      const sub = responseData.sub;
+      const issuer = testBehaviour === "UserinfoIdentityClaimInvalidIssuer" ? "invalid-issuer" : responseData.coreIdentity.issuer;
+      const aud = testBehaviour === "UserinfoIdentityClaimInvalidAudience" ? "invalid-aud" : responseData.coreIdentity.aud;
+      const vot = testBehaviour === "UserinfoIdentityClaimZeroVot" ? "P0" : responseData.coreIdentity.vot;
       const name: CoreIdentityName = [];
       const birthDate: CoreIdentityBirthDate = [];
       const coreIdentityClaim = await generateCoreIdentityClaim(vot, name, birthDate, spotPrivateKeyInfo, sub, issuer, aud);
@@ -80,11 +81,11 @@ async function generateCoreIdentityClaim(vot: string, name: CoreIdentityName, bi
   };
   const claim = await new SignJWT(payload)
     .setProtectedHeader({ alg: spotPrivateKeyInfo.keyAlg, kid: spotPrivateKeyInfo.keyId })
-    .setNotBefore(123)
+    //.setNotBefore()
     .setSubject(sub)
-    .setIssuedAt(1541493724)
+    .setIssuedAt()
     .setIssuer(issuer)
-    .setExpirationTime(1573029723)
+    .setExpirationTime("1h")
     .setJti(randomUUID())
     .setAudience(aud)
     .sign(spotPrivateKeyInfo.privateKey);

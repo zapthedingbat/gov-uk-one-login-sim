@@ -80,6 +80,7 @@
           <p>The authorization request doesn't require identity verification</p>
         {% endif %}
 
+        <input type=hidden name="action" value="Success" >
         {{ govukButton({
           text: "Continue"
         }) }}
@@ -124,8 +125,13 @@
           name: "action",
           items: [
             {
-              value: "state_mismatch",
+              checked: true,
+              value: "TokenExchangeStateMismatch",
               text: "State parameter mismatch"
+            },
+            {
+              value: "TokenExchangeNonceMismatch",
+              text: "Nonce parameter mismatch"
             }
           ]
         }) }}

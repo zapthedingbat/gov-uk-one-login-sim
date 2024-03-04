@@ -36,25 +36,20 @@ type RefreshTokenSet = {
   expires_in: number;
 };
 
-export type TokenExchangeTestBehaviour =
+export type TestBehaviour =
   | "Success"
-  | "ServerError"
-  | "NonceMismatch"
-  | "WrongIdTokenAudience"
-  | "InvalidResourceJson"
-  | "ExpiredIdentityClaim"
-  | "ZeroVot"
-  | "InvalidAudience"
-  | "InvalidIssuer"
+  | "TokenExchangeServerError"
+  | "TokenExchangeNonceMismatch"
+  | "TokenExchangeExpired"
+  | "TokenExchangeInvalidAudience"
+  | "TokenExchangeInvalidIssuer"
+  | "UserinfoIdentityClaimExpired"
+  | "UserinfoIdentityClaimZeroVot"
+  | "UserinfoIdentityClaimInvalidAudience"
+  | "UserinfoIdentityClaimInvalidIssuer"
+  | "UserinfoServerError"
+  | "UserinfoInvalidJson"
 
-export type UserinfoTestBehaviour =
-  | "Success"
-  | "ServerError"
-  | "InvalidResourceJson"
-  | "ExpiredIdentityClaim"
-  | "ZeroVot"
-  | "InvalidAudience"
-  | "InvalidIssuer"
 
 export type CoreIdentityName = Array<{
   validFrom?: string;
@@ -83,13 +78,13 @@ type UserinfoResponseData = {
 };
 
 export type Userinfo = {
-  responseBehaviour: UserinfoTestBehaviour;
+  testBehaviour: TestBehaviour;
   responseData?: UserinfoResponseData
 };
 
 export type TokenExchangeResponseData = any
 export type TokenExchange = {
   authorizeRequestParameters: AuthorizeRequestParameters,
-  testBehaviour: TokenExchangeTestBehaviour
+  testBehaviour: TestBehaviour
   responseData: TokenExchangeResponseData
 }
