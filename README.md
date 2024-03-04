@@ -1,6 +1,6 @@
-# A GOV.UK One Login development and integration testing tool
+# A GOV.UK One Login development and integration simulation tool
 
-A NodeJS+TypeScript application to stub GOV.UK One Login service to help developing and testing an relying party.
+A NodeJS+TypeScript application to simulate GOV.UK One Login service to help developing and testing an relying party.
 
 The mock is maintained independently from the production and pre-production environments and has some differences.
 
