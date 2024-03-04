@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import AsyncHandler from "../lib/AsyncHandler";
-import TTLCache from "@isaacs/ttlcache";
-import { CoreIdentityBirthDate, CoreIdentityName, PrivateKeyInfo, UserinfoResponse } from "../lib/types";
+import { CoreIdentityBirthDate, CoreIdentityName, PrivateKeyInfo } from "../lib/types";
 import { randomUUID } from "node:crypto";
 import { SignJWT } from "jose";
+import { IUserinfoStore } from "../lib/UserinfoStore";
 
-export default (userinfoStore: TTLCache<string, UserinfoResponse>, spotPrivateKeyInfo: PrivateKeyInfo) => {
+export default (userinfoStore: IUserinfoStore, spotPrivateKeyInfo: PrivateKeyInfo) => {
   return AsyncHandler(async (req: Request, res: Response) => {
 
     const authorizationHeader = req.header("Authorization");
@@ -20,7 +20,8 @@ export default (userinfoStore: TTLCache<string, UserinfoResponse>, spotPrivateKe
       throw new Error("401 Unauthorized");
     }
 
-    switch(userInfo.behaviour){
+    const responseBehaviour = userInfo.responseBehaviour;
+    switch(responseBehaviour){
       case "ServerError":
         res.sendStatus(500);
         break;
@@ -29,28 +30,29 @@ export default (userinfoStore: TTLCache<string, UserinfoResponse>, spotPrivateKe
         break;
     }
 
-    const sub = userInfo.resource.sub;
+    const responseData = userInfo.responseData!;
+    const sub = responseData!.sub;
 
     const response:any = {
       sub,
       "updated_at": 0,// TODO: what should this be?
     };
 
-    if(typeof userInfo.resource.email === "string"){
-      response.email = userInfo.resource.email;
+    if(typeof responseData.email === "string"){
+      response.email = responseData.email;
       response.email_verified = true;
     }
 
-    if(typeof userInfo.resource.phone === "string"){
-      response.email = userInfo.resource.phone;
+    if(typeof responseData.phone === "string"){
+      response.email = responseData.phone;
       response.phone_verified = true;
     }
 
-    if(typeof userInfo.resource.coreIdentity === "object"){
+    if(typeof responseData.coreIdentity === "object"){
       const sub = "foo";
-      const issuer = userInfo.behaviour === "InvalidIssuer" ? "invalid-issuer" : userInfo.resource.coreIdentity.issuer;
-      const aud = userInfo.behaviour === "InvalidAudience" ? "invalid-aud" : userInfo.resource.coreIdentity.aud;
-      const vot = userInfo.behaviour === "ZeroVot" ? "P0" : userInfo.resource.coreIdentity.vot;
+      const issuer = responseBehaviour === "InvalidIssuer" ? "invalid-issuer" : responseData.coreIdentity.issuer;
+      const aud = responseBehaviour === "InvalidAudience" ? "invalid-aud" : responseData.coreIdentity.aud;
+      const vot = responseBehaviour === "ZeroVot" ? "P0" : responseData.coreIdentity.vot;
       const name: CoreIdentityName = [];
       const birthDate: CoreIdentityBirthDate = [];
       const coreIdentityClaim = await generateCoreIdentityClaim(vot, name, birthDate, spotPrivateKeyInfo, sub, issuer, aud);

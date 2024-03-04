@@ -5,9 +5,9 @@ import pinoHttp from "pino-http";
 import { clientRegistrations } from "./config.clients";
 import { ClientConfigurations } from "./lib/ClientConfigurations";
 import { ConfigureNunjucks } from "./lib/ConfigureNunjucks";
-import { Keys } from "./lib/Keys";
+import { KeyStore } from "./lib/KeyStore";
 import { logger } from "./lib/Logger";
-import { TokenExchangeResponseData, PrivateKeyInfo, UserinfoResponse } from "./lib/types";
+import { TokenExchangeResponseData, PrivateKeyInfo, Userinfo } from "./lib/types";
 import authorize from "./routes/authorize";
 import home from "./routes/home";
 import jwks from "./routes/jwks";
@@ -16,6 +16,7 @@ import submit from "./routes/submit";
 import token from "./routes/token";
 import userinfo from "./routes/userinfo";
 import keys from "./routes/keys";
+import { IUserinfoStore } from "./lib/UserinfoStore";
 
 (async () => {
   const app = express();
@@ -25,10 +26,10 @@ import keys from "./routes/keys";
     clientRegistrations
   );
 
-  const keyStore = new Keys();
-  const spotKeyPair = Keys.createKeyPair();
+  const keyStore = new KeyStore();
+  const spotKeyPair = KeyStore.createKeyPair();
   const spotPrivateKeyInfo: PrivateKeyInfo = {
-    keyId: Keys.createKeyId(),
+    keyId: KeyStore.createKeyId(),
     keyAlg: spotKeyPair.keyAlg,
     privateKey: spotKeyPair.privateKey
   }
@@ -36,8 +37,8 @@ import keys from "./routes/keys";
   // Generate some key-pairs
   const keyCount = 3;
   for (let keyIndex = 0; keyIndex < keyCount; keyIndex++) {
-    const keyId = Keys.createKeyId();
-    const keyPair = Keys.createKeyPair();
+    const keyId = KeyStore.createKeyId();
+    const keyPair = KeyStore.createKeyPair();
     keyStore.addPair(keyId, keyPair.keyAlg, keyPair.publicKey, keyPair.privateKey);
   }
 
@@ -50,7 +51,7 @@ import keys from "./routes/keys";
   });
 
   // Create a store of userinfo responses so they can be returned after token exchange
-  const userinfoStore = new TTLCache<string, UserinfoResponse>({
+  const userinfoStore:IUserinfoStore = new TTLCache<string, Userinfo>({
     ttl: 180000, // 3 mins
   });
 
@@ -89,7 +90,7 @@ import keys from "./routes/keys";
   // OIDC token exchange
   app.post(
     "/token",
-    token(clientConfigurations, authorizeRequests, userinfoStore, keyStore)
+    token(clientConfigurations, authorizeRequests, keyStore)
   );
 
   // Serve the userinfo resource, protected by the access_token

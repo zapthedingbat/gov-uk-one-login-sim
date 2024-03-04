@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import AsyncHandler from "../lib/AsyncHandler";
-import { IPublicKeys } from "../lib/Keys";
+import { IPublicKeyStore } from "../lib/KeyStore";
 
-export default (publicKeys: IPublicKeys) => {
+export default (publicKeys: IPublicKeyStore) => {
     return AsyncHandler(async (req: Request, res: Response) => {
       res.json({keys:publicKeys.asJwks()});
     });

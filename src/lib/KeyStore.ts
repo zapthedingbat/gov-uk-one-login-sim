@@ -7,15 +7,15 @@ import {
 import { logger } from "./Logger";
 import { PrivateKeyInfo } from "./types";
 
-export interface IPublicKeys {
+export interface IPublicKeyStore {
   asJwks(): Array<JsonWebKey>;
 }
 
-export interface IPrivateKeys {
+export interface IPrivateKeyStore {
   getPrivateKey(keyId?: string): PrivateKeyInfo;
 }
 
-export class Keys implements IPublicKeys, IPrivateKeys {
+export class KeyStore implements IPublicKeyStore, IPrivateKeyStore {
   private _keys: Map<
     string,
     { keyAlg: string; publicKey: KeyObject; privateKey: KeyObject }
@@ -43,7 +43,6 @@ export class Keys implements IPublicKeys, IPrivateKeys {
   }
 
   public getPrivateKey(keyId?: string): PrivateKeyInfo {
-    logger.debug({ keyId }, "looking for private key");
     const _keyId = keyId ? keyId : this._keys.keys().next().value;
 
     const result = this._keys.get(_keyId);

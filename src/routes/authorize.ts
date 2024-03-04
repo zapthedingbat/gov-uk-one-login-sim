@@ -3,10 +3,6 @@ import AsyncHandler from "../lib/AsyncHandler";
 import { IClientConfigurations } from "../lib/ClientConfigurations";
 import { AuthorizeRequestParameters } from "../lib/RequestParameters";
 import { userTemplates } from "../config.users";
-import {
-  AuthorizeValidationResult,
-  IAuthorizeValidationResult,
-} from "../lib/ValidationResult";
 import { ClientConfiguration } from "../lib/types";
 
 export default (clientConfigurations: IClientConfigurations) => {
@@ -33,7 +29,7 @@ export default (clientConfigurations: IClientConfigurations) => {
     const parameters = new AuthorizeRequestParameters(req);
     //const result = new AuthorizeValidationResult();
 
-    let clientConfiguration;
+    let clientConfiguration: ClientConfiguration | undefined;
 
     // Validate ClientId
     const clientId = parameters.client_id;
@@ -100,9 +96,8 @@ export default (clientConfigurations: IClientConfigurations) => {
       }
 
       // Scopes must match client configuration
-      if (
-        clientConfiguration &&
-        scopes.some((s) => !clientConfiguration.scopes.includes(s))
+      if (clientConfiguration &&
+        scopes.some((s) => !clientConfiguration!.scopes.includes(s))
       ) {
         req.log.error(
           `The authorize request 'scope' parameter must exactly only match scope values registered for the client. 'scope' parameter values were ${scopes
@@ -269,7 +264,7 @@ export default (clientConfigurations: IClientConfigurations) => {
         );
       } else if (clientConfiguration) {
         const claimNames = Object.keys(claims.userinfo);
-        if (claimNames.some((c) => !clientConfiguration.claims.includes(c))) {
+        if (claimNames.some((c) => !clientConfiguration!.claims.includes(c))) {
           req.log.error(
             `The authorize request 'claims' parameter contains a claim that is not registered in the client configuration.
   The value of the parameter was '${parameters.claims}.
