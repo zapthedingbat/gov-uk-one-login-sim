@@ -1,0 +1,15 @@
+{% extends "layout_unbranded.html" %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">
+        GOV.UK One Login
+      </h1>
+      <h2>Public key used to sign core identity claim</h2>
+      <pre>{{publicKey}}</pre>
+    </div>
+  </div>
+
+{% endblock %}

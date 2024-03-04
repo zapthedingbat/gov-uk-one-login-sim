@@ -1,0 +1,143 @@
+{% extends "layout_unbranded.html" %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">
+        Valid Authorize Request
+      </h1>
+
+      <form method="POST" action="/app/submit">
+
+        {% for name, value in parameters %}
+          {{ govukInput({
+          label: {
+            text: name
+          },
+          name: name,
+          value: value,
+          attributes: { readonly: "readonly" }
+        }) }}
+        {% endfor %}
+
+        <h2 class="govuk-heading-m">What result would you like to simulate?</h2>
+
+        {% call govukFieldset({
+        legend: {
+          text: "Success",
+          classes: "govuk-fieldset__legend--l"
+        }
+      }) %}
+
+        <h2 class="govuk-heading-m">Authentication</h2>
+
+        {{ govukInput({
+          label: {
+            text: "Subject Identifier"
+          },
+          hint: {
+            text: "Uniquely identifies the authenticated user to your service"
+          },
+          id: "sub",
+          name: "sub",
+          value: "urn:fdc:gov.uk:2022:uSvz6Wj2S0TVpNBBgqrgENaXJJww9l0eeppC_73FV5k"
+        }) }}
+
+        {{ govukInput({
+          label: {
+            text: "Telephone number"
+          },
+          hint: {
+            text: "Optionally provided by the user for two factor authentication"
+          },
+          id: "phone",
+          name: "phone",
+          type: "tel",
+          value: "07012345678"
+        }) }}
+
+        {{ govukInput({
+          label: {
+            text: "Email address"
+          },
+          hint: {
+            text: "Verified email address captured at registration"
+          },
+          id: "email",
+          name: "email",
+          type: "email",
+          value: "user@example.com"
+        }) }}
+
+        <h2 class="govuk-heading-m">Identity verification</h2>
+        {% if claims.length > 0 %}
+          <p>Userinfo data</p>
+          {% for claim in claims %}
+            {{claim}}
+          {% endfor %}
+        {% else %}
+          <p>The authorization request doesn't require identity verification</p>
+        {% endif %}
+
+        {{ govukButton({
+          text: "Continue"
+        }) }}
+
+        {% endcall %}
+
+      </form>
+
+      {% call govukFieldset({
+        legend: {
+          text: "Failure",
+          classes: "govuk-fieldset__legend--l"
+        }
+      }) %}
+
+      <p class="govuk-heading-m">Ensure that your application can gracefully handle failures.</p>
+
+      <form method="POST" action="/app/submit">
+
+        {% for name, value in parameters %}
+          <input type=hidden name="{{name}}" value="{{value}}" >
+        {% endfor %}
+
+        <!--
+        TODO: Radio button list of lots of error scenario than can be
+        - 50x from token exchange
+        - 40x from token exchange
+        - slow/invalid response from token exchange
+        - server_error error parameter returned to rp
+        - access_denied error parameter returned to rp
+        - temporarily_unavailable error parameter returned to rp
+        - invalid keys at token exchange
+        - expired keys at token exchange
+        - bad JSON at token exchange
+        - bad keys at userinfo
+        - expired keys at userinfo
+        - bad json at userinfo
+        - etc etc etc
+         -->
+
+        {{ govukRadios({
+          name: "action",
+          items: [
+            {
+              value: "state_mismatch",
+              text: "State parameter mismatch"
+            }
+          ]
+        }) }}
+
+        {{ govukButton({
+          text: "Continue"
+        }) }}
+      </form>
+
+      {% endcall %}
+
+    </div>
+  </div>
+
+{% endblock %}

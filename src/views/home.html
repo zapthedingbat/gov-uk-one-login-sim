@@ -1,0 +1,78 @@
+{% extends "layout_unbranded.html" %}
+
+{% block content %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">
+        GOV.UK One Login
+      </h1>
+      <p>
+        This test system is for developers to create and test integrations with
+        GOV.UK One Login.
+      </p>
+      <p>
+        It provides test endpoints used during the authentication and identity
+        verification process. These return example responses that can be used to
+        validate your integration and perform testing.
+      </p>
+
+      <h2 class="govuk-heading-m">Integrating</h2>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>Redirect to GOV.UK One Login authorization server</h2>
+        <li>Exchange authorization code for an id token and access token</h2>
+        <li>Verify id token</li>
+        <li>Use access token to retrieve user information</li>
+        <li>Validate core identity claim</li>
+        <li>Check failure scenarios</li>
+      </ul>
+
+      <h2 class="govuk-heading-m">OpenId Connect endpoints</h2>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>
+          <a href="/.well-known/openid-configuration">/.well-known/openid-configuration</a>
+          <p>
+            You can use this URL to automatically load OIDC client configuration.
+          </p>
+        </li>
+
+        <li>
+          <a href="/authorize">/authorize</a>
+          <p>
+            Start the authentication and identity proving process by redirecting
+            a user's browser here with the right query parameters.
+          </p>
+        </li>
+        <li>
+          <a href="/token">/token</a>
+          <p>
+            Token exchange endpoint. Called by server-side code to swap the auth code for an access
+            token.
+          </p>
+        </li>
+        <li>
+          <a href="/userinfo">/userinfo</a>
+          <p>
+            Protected by the access_token. Called by server-side code to access the result of the 
+            identity verification.
+          </p>
+        </li>
+      </ul>
+
+      <h2 class="govuk-heading-m">Configuration</h2>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>
+          <a href="/key">Keys</a>
+          <p>View the public key used to sign the core identity claim returned as a result of identity verification</p>
+        </li>
+        <li>
+          <a href="/client">Client configuration</a>
+          <p>
+            View the details of the configured OpenID Connect clients.
+          </p>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+{% endblock %}
