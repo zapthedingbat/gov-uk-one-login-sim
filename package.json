@@ -24,7 +24,7 @@
     "@types/nunjucks": "^3.2.1",
     "@types/pino-http": "^5.8.4",
     "dotenv": "^16.0.0",
-    "nodemon": "^2.0.15",
+    "nodemon": "^3.1.0",
     "pino-pretty": "^9.1.1",
     "sass": "^1.56.1",
     "ts-node": "^10.7.0",
@@ -37,7 +37,7 @@
     "express-pino-logger": "^7.0.0",
     "govuk-frontend": "^4.0.1",
     "jose": "^4.11.0",
-    "nunjucks": "^3.2.3",
+    "nunjucks": "^3.2.4",
     "pino": "^8.19.0",
     "pino-http": "^9.0.0"
   }

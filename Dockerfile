@@ -1,4 +1,4 @@
-ARG VERSION=16-alpine
+ARG VERSION=20-alpine
 FROM node:$VERSION AS build-env
 WORKDIR /app
 
@@ -7,7 +7,13 @@ COPY package*.json ./
 RUN npm ci
 
 # Copy everything else and build
-COPY ./ ./
+COPY ./public ./public
+COPY ./scripts ./scripts
+COPY ./types ./types
+COPY ./src ./src
+COPY ./tsconfig.json ./tsconfig.json
+COPY ./.npmrc ./.npmrc
+
 RUN npm run build
 
 # Runtime image
@@ -23,7 +29,7 @@ USER app
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --production
+RUN npm ci --omit=dev
 
 COPY --from=build-env /app/dist .
 COPY --from=build-env /app/public .
@@ -31,4 +37,4 @@ COPY --from=build-env /app/public .
 ENV NODE_PORT=${NODE_PORT}
 EXPOSE ${NODE_PORT}
 
-ENTRYPOINT ["node", "./index.js"]
+ENTRYPOINT ["node", "./server.js"]

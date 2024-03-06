@@ -30,11 +30,11 @@ npm run dev
 ### Building the docker image
 
 ```bash
-docker build -t gov-uk-one-login-stub .
+docker build -t gov-uk-one-login-sim .
 ```
 
 ### Running the docker image
 
 ```bash
-docker run -it --init -p 3000:8080 gov-uk-one-login-stub
+docker run -it --init -p 3000:8080 gov-uk-one-login-sim
 ```
