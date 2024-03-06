@@ -76,6 +76,23 @@
           {% for claim in claims %}
             {{claim}}
           {% endfor %}
+          
+          {{ govukSelect({
+            id: "identity",
+            name: "identity",
+            label: {
+              text: "Identity to return"
+            },
+            items: [
+              {% for userTemplate in userTemplates %}
+                {
+                  value: {{ userTemplate.key }},
+                  text: {{ userTemplate.key }}
+                },
+              {% endfor %}
+            ]
+          }) }}
+          
         {% else %}
           <p>The authorization request doesn't require identity verification</p>
         {% endif %}

@@ -71,7 +71,7 @@ async function generateCoreIdentityClaim(vot: string, name: CoreIdentityName, bi
     "vc": {
       "type": [
         "VerifiableCredential",
-        "VerifiableIdentityCredential"
+        "IdentityCheckCredential"
       ],
       "credentialSubject": {
         name: name,
