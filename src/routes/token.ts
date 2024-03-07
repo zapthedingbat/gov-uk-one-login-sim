@@ -81,18 +81,35 @@ export default (
         // This is a successful request
         // Return a token set
         if (!res.headersSent) {
-          const nonce = tokenExchange.testBehaviour === "TokenExchangeNonceMismatch" ?  "invalid_nonce" : tokenExchange.authorizeRequestParameters.nonce!;
+
+          if(tokenExchange.testBehaviour === "TokenExchangeServerError"){
+            res.sendStatus(500);
+            return;
+          }
+
+          if(tokenExchange.testBehaviour === "TokenExchangeInvalidJson"){
+            res.send("<html><body>Invalid JSON");
+            return;
+          }
+
           const accessToken = await generateRandomString();
           const idTokenPrivateKey = privateKeyStore.getPrivateKey();
+          const userinfo = tokenExchange.userinfo!;
+          const nonce = tokenExchange.testBehaviour === "TokenExchangeNonceMismatch" ?  "invalid-nonce" : tokenExchange.authorizeRequestParameters.nonce!;
+          const expiration = tokenExchange.testBehaviour === "TokenExchangeExpired" ? (Date.now() / 1000) - 3600 : (Date.now() / 1000) + 3600;
+          const audience = tokenExchange.testBehaviour === "TokenExchangeInvalidAudience" ? "invalid-audience" : clientId!;
+          const issuer = tokenExchange.testBehaviour === "TokenExchangeInvalidIssuer" ? "invalid-issuer" : urlResolver.resolve("/");
           const idToken = await generateIdToken({
-            audience: clientId!,
-            issuer: urlResolver.resolve("/"),
+            audience: audience,
+            issuer: issuer,
             keyAlg: idTokenPrivateKey.keyAlg,
             keyId: idTokenPrivateKey.keyId,
-            sub: "idtokensub",
+            sub: userinfo.sub,
             nonce: nonce,
             privateKey: idTokenPrivateKey.privateKey,
+            expiration
           });
+
           const tokenSet: TokenSet = {
             token_type: "Bearer",
             access_token: accessToken,
@@ -101,13 +118,10 @@ export default (
 
           userinfoStore.set(accessToken, {
             testBehaviour: tokenExchange.testBehaviour,
-            responseData: {
-              sub: "userinfosub",// tokenExchange.responseData.sub
-            }
+            userinfo: userinfo
           });
 
           res.json(tokenSet);
-          // Set the userinfo details so they can be served
         }
       }
     }
@@ -172,15 +186,16 @@ async function generateIdToken(generateIdTokenParams: {
   sub: string;
   nonce: string;
   privateKey: KeyLike;
+  expiration: number;
 }) {
-  const { audience, issuer, keyAlg, keyId, sub, nonce, privateKey } =
+  const { audience, issuer, keyAlg, keyId, sub, nonce, privateKey, expiration } =
     generateIdTokenParams;
   const payload = {
     nonce,
   };
   const claim = await new SignJWT(payload)
     .setAudience(audience)
-    .setExpirationTime("1h")
+    .setExpirationTime(expiration)
     .setIssuedAt(0)
     .setIssuer(issuer)
     .setJti(randomUUID())
