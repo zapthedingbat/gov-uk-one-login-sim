@@ -1,4 +1,3 @@
-import TTLCache from "@isaacs/ttlcache";
 import express, { NextFunction, Request, Response, urlencoded } from "express";
 import path from "node:path";
 import pinoHttp from "pino-http";
@@ -7,7 +6,7 @@ import { ClientConfigurations } from "./lib/ClientConfigurations";
 import { ConfigureNunjucks } from "./lib/ConfigureNunjucks";
 import { KeyStore } from "./lib/KeyStore";
 import { logger } from "./lib/Logger";
-import { TokenExchangeResponseData, PrivateKeyInfo, Userinfo } from "./lib/types";
+import { PrivateKeyInfo } from "./lib/types";
 import authorize from "./routes/authorize";
 import home from "./routes/home";
 import jwks from "./routes/jwks";
@@ -16,7 +15,8 @@ import submit from "./routes/submit";
 import token from "./routes/token";
 import userinfo from "./routes/userinfo";
 import keys from "./routes/keys";
-import { IUserinfoStore } from "./lib/UserinfoStore";
+import { IUserinfoStore, UserinfoStore } from "./lib/UserinfoStore";
+import { TokenExchangeStore } from "./lib/TokenExchangeResponseStore";
 
 (async () => {
   const app = express();
@@ -26,16 +26,28 @@ import { IUserinfoStore } from "./lib/UserinfoStore";
     clientRegistrations
   );
 
-  const keyStore = new KeyStore();
-  const spotKeyPair = KeyStore.createKeyPair();
-  const spotPrivateKeyInfo: PrivateKeyInfo = {
-    keyId: KeyStore.createKeyId(),
-    keyAlg: spotKeyPair.keyAlg,
-    privateKey: spotKeyPair.privateKey
+  // Load the key pair for signing the identity claim and save it as a file if it's not there
+  const identityVerificationKeyFilepath = process.env.IDV_PRIVATE_KEY_FILE || "idv-private-key.pem";
+  let idvKeyPair = await KeyStore.readKeyPairFile(identityVerificationKeyFilepath);
+  if(!idvKeyPair){
+    idvKeyPair = KeyStore.createKeyPair();
+    await KeyStore.writeKeyPairFile(identityVerificationKeyFilepath, idvKeyPair);
   }
+  const idvPrivateKeyInfo: PrivateKeyInfo = {
+    keyId: KeyStore.createKeyId(),
+    keyAlg: idvKeyPair.keyAlg,
+    privateKey: idvKeyPair.privateKey
+  }
+  
+  const idvPublicKeyPem = idvKeyPair.publicKey.export({
+    format: "pem",
+    type: "spki",
+  });
+  logger.info(`IDV public key \n${idvPublicKeyPem}`);
 
   // Generate some key-pairs
   const keyCount = 3;
+  const keyStore = new KeyStore();
   for (let keyIndex = 0; keyIndex < keyCount; keyIndex++) {
     const keyId = KeyStore.createKeyId();
     const keyPair = KeyStore.createKeyPair();
@@ -46,14 +58,10 @@ import { IUserinfoStore } from "./lib/UserinfoStore";
   const authCodeExpiry = process.env.AUTH_CODE_EXPIRY
     ? Number.parseInt(process.env.AUTH_CODE_EXPIRY)
     : 3000;
-  const authorizeRequests = new TTLCache<string, TokenExchangeResponseData>({
-    ttl: authCodeExpiry,
-  });
+  const tokenExchangeStore = new TokenExchangeStore(authCodeExpiry);
 
   // Create a store of userinfo responses so they can be returned after token exchange
-  const userinfoStore:IUserinfoStore = new TTLCache<string, Userinfo>({
-    ttl: 180000, // 3 mins
-  });
+  const userinfoStore:IUserinfoStore = new UserinfoStore();
 
   // Configure HTTP request logging
   const httpLogger = pinoHttp({
@@ -90,21 +98,21 @@ import { IUserinfoStore } from "./lib/UserinfoStore";
   // OIDC token exchange
   app.post(
     "/token",
-    token(clientConfigurations, authorizeRequests, keyStore, userinfoStore)
+    token(clientConfigurations, tokenExchangeStore, keyStore, userinfoStore)
   );
 
   // Serve the userinfo resource, protected by the access_token
-  app.get("/userinfo", userinfo(userinfoStore, spotPrivateKeyInfo));
+  app.get("/userinfo", userinfo(userinfoStore, idvPrivateKeyInfo));
 
   // Stub application used to manage the simulation
-  app.post("/app/submit", submit(authorizeRequests));
+  app.post("/app/submit", submit(tokenExchangeStore));
 
   // Stub application used to manage the simulation
-  app.post("/app/keys", keys(spotKeyPair.publicKey));
+  app.get("/app/keys", keys(idvKeyPair.publicKey));
 
   // Generic error handler
-  app.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
-    logger.error(err);
+  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    req.log.error(err);
     if (res.headersSent) {
       return next(err);
     }

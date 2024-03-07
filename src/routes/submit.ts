@@ -1,79 +1,102 @@
 import { Request, Response } from "express";
 import AsyncHandler from "../lib/AsyncHandler";
 import { generateAuthorizationCode } from "../lib/tokens";
-import { TestBehaviour, TokenExchange } from "../lib/types";
+import { UserinfoData, TestBehaviour, TokenExchangeData } from "../lib/types";
 import { AuthorizeRequestParameters } from "../lib/RequestParameters";
-import { UrlResolver } from "../lib/UrlResolver";
 import { ITokenExchangeStore } from "../lib/TokenExchangeResponseStore";
+import { userTemplates } from "../config.users";
+import { UrlResolver } from "../lib/UrlResolver";
 
 export default (tokenExchangeStore: ITokenExchangeStore) => {
   return AsyncHandler(async (req: Request, res: Response) => {
-    switch (req.body.action) {
-      case "TokenExchangeStateMismatch":
-        redirectWithWrongState(req, res);
-        break;
-      case "TokenExchangeNonceMismatch":
-        tokenExchangeFailure(req, res, tokenExchangeStore, "TokenExchangeNonceMismatch");
-        break;
-      case "Success":
-        success(req, res, tokenExchangeStore);
-        break;
-      default:
-        throw new Error(`Unknown action ${req.body.action}`);
+    const testBehaviour = req.body.action as TestBehaviour;
+    if(testBehaviour ==="AuthorizeStateMismatch"){
+      redirectWithWrongState(req, res);
+    } else{
+      tokenExchangeSuccess(req, res, tokenExchangeStore, testBehaviour);
     }
   });
 };
 
-function tokenExchangeFailure(
+function tokenExchangeSuccess(
   req: Request,
   res: Response,
   tokenExchangeStore: ITokenExchangeStore,
   testBehaviour: TestBehaviour
-){
-  const authCode = generateAuthorizationCode();
-  const tokenExchange: TokenExchange = {
-    authorizeRequestParameters: new AuthorizeRequestParameters(req),
-    testBehaviour: testBehaviour,
-    responseData: {
-      sub: req.body.sub,
-    }
-  };
-  tokenExchangeStore.set(authCode, tokenExchange);
-  // Redirect back to RP with authorization code and state parameters
-  const locationUrl = new URL(req.body.redirect_uri);
-  locationUrl.searchParams.set("code", authCode);
-  locationUrl.searchParams.set("state", req.body.state);
-  res.redirect(locationUrl.toString());
-}
-
-function success(
-  req: Request,
-  res: Response,
-  tokenExchangeStore: ITokenExchangeStore
 ) {
-  const urlResolver: UrlResolver = new UrlResolver(req);
   const authCode = generateAuthorizationCode();
   const parameters = new AuthorizeRequestParameters(req);
-  const tokenExchange: TokenExchange = {
-    testBehaviour: "Success",
-    authorizeRequestParameters: parameters,
-    responseData: {
-      sub: req.body.sub,
-      userinfo: {
-        behaviour: "Success",
-        resource:{
-          sub: req.body.sub,
-          coreIdentity: {
-            issuer: urlResolver.resolve("/"),
-            aud: parameters.client_id!,
-            vot: "P2",
-            birthDate: [], //TODO: read these from parameters
-            name: [], //TODO: read these from parameters
-          }
-        }
-      },
-    }
+  const userTemplate = userTemplates[req.body.identity];
+  const userinfo: UserinfoData = {
+    sub: userTemplate.sub,
   };
+
+  // TODO: Copy user template data based on requested scopes
+  const scopes: Array<string> =
+    typeof parameters.scope === "string" ? parameters.scope.split(" ") : [];
+  if (scopes.includes("email")) {
+    userinfo.email = userTemplate.email;
+  }
+  if (scopes.includes("phone")) {
+    userinfo.phone_number = userTemplate.phone_number;
+  }
+
+  // TODO: Copy user template data based on requested claims
+  if (typeof parameters.claims === "string") {
+    const claims: { userinfo: { [claim: string]: null } } = JSON.parse(
+      parameters.claims
+    );
+    const userinfoClaimIds = Object.keys(claims.userinfo);
+    if (
+      userinfoClaimIds.includes(
+        "https://vocab.account.gov.uk/v1/coreIdentityJWT"
+      ) &&
+      userTemplate.coreIdentity
+    ) {
+      const urlResolver = new UrlResolver(req);
+      const issuer = urlResolver.resolve("/");
+      userinfo.coreIdentity = {
+        audience: parameters.client_id!,
+        issuer: issuer,
+        vot: parameters.loc!,
+        credentialSubject: userTemplate.coreIdentity,
+      };
+    }
+    if (
+      userinfoClaimIds.includes("https://vocab.account.gov.uk/v1/address") &&
+      userTemplate.address
+    ) {
+      userinfo.address = userTemplate.address;
+    }
+    if (
+      userinfoClaimIds.includes(
+        "https://vocab.account.gov.uk/v1/drivingPermit"
+      ) &&
+      userTemplate.drivingPermit
+    ) {
+      userinfo.drivingPermit = userTemplate.drivingPermit;
+    }
+    if (
+      userinfoClaimIds.includes("https://vocab.account.gov.uk/v1/passport") &&
+      userTemplate.passport
+    ) {
+      userinfo.passport = userTemplate.passport;
+    }
+    if (
+      userinfoClaimIds.includes(
+        "https://vocab.account.gov.uk/v1/socialSecurityRecord"
+      )
+    ) {
+      userinfo.socialSecurityRecord = userTemplate.socialSecurityRecord;
+    }
+  }
+
+  const tokenExchange: TokenExchangeData = {
+    testBehaviour: testBehaviour,
+    authorizeRequestParameters: parameters,
+    userinfo,
+  };
+
   tokenExchangeStore.set(authCode, tokenExchange);
   // Redirect back to RP with authorization code and state parameters
   const locationUrl = new URL(req.body.redirect_uri);

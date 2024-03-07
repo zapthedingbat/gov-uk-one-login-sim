@@ -38,53 +38,102 @@ type RefreshTokenSet = {
 
 export type TestBehaviour =
   | "Success"
+  | "AuthorizeStateMismatch"
+  | "TokenExchangeInvalidJson"
   | "TokenExchangeServerError"
   | "TokenExchangeNonceMismatch"
   | "TokenExchangeExpired"
   | "TokenExchangeInvalidAudience"
   | "TokenExchangeInvalidIssuer"
   | "UserinfoIdentityClaimExpired"
-  | "UserinfoIdentityClaimZeroVot"
   | "UserinfoIdentityClaimInvalidAudience"
   | "UserinfoIdentityClaimInvalidIssuer"
   | "UserinfoServerError"
-  | "UserinfoInvalidJson"
+  | "UserinfoInvalidJson";
 
-
-export type CoreIdentityName = Array<{
-  validFrom?: string;
-  validUntil?: string;
-  nameParts: Array<{
-    value: string;
-    type: "GivenName" | "FamilyName";
-  }>;
-}>;
-
-export type CoreIdentityBirthDate = Array<{
-  value: string;
-}>;
-
-type UserinfoResponseData = {
-  sub: string;
-  phone?: any;
-  email?: any;
-  coreIdentity?: {
-    vot: string;
-    aud: string;
-    issuer: string;
-    name: CoreIdentityName;
-    birthDate: CoreIdentityBirthDate;
-  };
-};
-
-export type Userinfo = {
+export type TokenExchangeData = {
   testBehaviour: TestBehaviour;
-  responseData?: UserinfoResponseData
+  authorizeRequestParameters: AuthorizeRequestParameters;
+  userinfo: UserinfoData;
 };
 
-export type TokenExchangeResponseData = any
-export type TokenExchange = {
-  authorizeRequestParameters: AuthorizeRequestParameters,
-  testBehaviour: TestBehaviour
-  responseData: TokenExchangeResponseData
-}
+type UserinfoDataBase = {
+  sub: string;
+  email?: string;
+  phone_number?: string;
+};
+
+type UserinfoDrivingPermitClaimData = {
+  drivingPermit?: Array<{
+    expiryDate: string;
+    issueNumber: string;
+    issuedBy: string;
+    personalNumber: string;
+  }>;
+};
+
+type UserinfoAddressClaimData = {
+  address?: Array<{
+    validFrom?: string;
+    validUntil?: string;
+    uprn: string;
+    subBuildingName: string;
+    buildingName: string;
+    buildingNumber: string;
+    dependentStreetName: string;
+    streetName: string;
+    doubleDependentAddressLocality: string;
+    dependentAddressLocality: string;
+    addressLocality: string;
+    postalCode: string;
+    addressCountry: string;
+  }>;
+};
+
+type UserinfoPassportClaimData = {
+  passport?: Array<{
+    documentNumber: string;
+    icaoIssuerCode: string;
+    expiryDate: string;
+  }>;
+};
+
+type UserinfoSocialSecurityRecordClaimData = {
+  socialSecurityRecord?: Array<{
+    personalNumber: string;
+  }>;
+};
+
+export type UserinfoCredentialSubjectData = {
+  name: Array<{
+    validFrom?: string;
+    validUntil?: string;
+    nameParts: Array<{
+      value: string;
+      type: "GivenName" | "FamilyName";
+    }>;
+  }>;
+  birthDate: Array<{
+    value: string;
+  }>;
+};
+
+type UserinfoUnsignedClaimsData = UserinfoAddressClaimData &
+  UserinfoDrivingPermitClaimData &
+  UserinfoPassportClaimData &
+  UserinfoSocialSecurityRecordClaimData;
+
+export type UserinfoData = UserinfoDataBase &
+  UserinfoUnsignedClaimsData & {
+    coreIdentity?: {
+      audience: string;
+      issuer: string;
+      vot: string;
+      credentialSubject: UserinfoCredentialSubjectData;
+    };
+  };
+
+export type UserinfoTemplate = UserinfoDataBase &
+  UserinfoUnsignedClaimsData & {
+    coreIdentity?: UserinfoCredentialSubjectData;
+  };

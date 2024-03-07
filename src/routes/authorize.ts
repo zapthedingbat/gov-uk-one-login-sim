@@ -3,7 +3,7 @@ import AsyncHandler from "../lib/AsyncHandler";
 import { IClientConfigurations } from "../lib/ClientConfigurations";
 import { AuthorizeRequestParameters } from "../lib/RequestParameters";
 import { userTemplates } from "../config.users";
-import { ClientConfiguration } from "../lib/types";
+import { ClientConfiguration, TestBehaviour } from "../lib/types";
 
 export default (clientConfigurations: IClientConfigurations) => {
   return AsyncHandler(async (req: Request, res: Response) => {
@@ -96,7 +96,8 @@ export default (clientConfigurations: IClientConfigurations) => {
       }
 
       // Scopes must match client configuration
-      if (clientConfiguration &&
+      if (
+        clientConfiguration &&
         scopes.some((s) => !clientConfiguration!.scopes.includes(s))
       ) {
         req.log.error(
@@ -131,6 +132,8 @@ export default (clientConfigurations: IClientConfigurations) => {
     // Validate VTR
     // See: https://github.com/alphagov/di-authentication-api/blob/b2eca7d511001a208b026b535f6bba4f72cbd9bd/shared/src/main/java/uk/gov/di/authentication/shared/entity/VectorOfTrust.java#L53
     const vtr = parameters.vtr;
+    const requestedLevelsOfConfidence = [];
+
     if (typeof vtr === "string" && vtr !== "") {
       let vtrObj: any | null = null;
       try {
@@ -182,8 +185,8 @@ export default (clientConfigurations: IClientConfigurations) => {
           );
         }
 
-        const levelOfConfidence = levelOfConfidenceComponents.join(".");
-
+        const levelOfConfidence = levelOfConfidenceComponents[0];
+        requestedLevelsOfConfidence.push(levelOfConfidence);
         // Validate the Credential Trust Levels - "C*"
         const credentialTrustLevelComponents = vtrItemParts.filter(
           (x: string) => x.startsWith("C")
@@ -286,10 +289,38 @@ export default (clientConfigurations: IClientConfigurations) => {
     }
 
     if (!res.headersSent) {
+      const userTemplateSelectItems = Object.keys(userTemplates).map((key) => ({
+        value: key,
+        text: key,
+      }));
+
+      const locSelectItems = requestedLevelsOfConfidence
+        .filter((loc) => typeof loc !== "undefined")
+        .map((loc) => ({ value: loc, text: `${loc} - Requested` }))
+        .concat({ value: "P0", text: "P0 - None" });
+
+      const failuresRadioItems = [
+        { checked: true, text: "Success", value: "Success" },
+        { text: "Return to RP with a state that does not match the authorize parameter", value: "AuthorizeStateMismatch" },
+        { text: "Token exchange returns invalid JSON", value: "TokenExchangeInvalidJson" },
+        { text: "Token exchange returns a server error", value: "TokenExchangeServerError" },
+        { text: "Token exchange returns a nonce value that does not match the authorize parameter", value: "TokenExchangeNonceMismatch" },
+        { text: "Token exchange returns an id_token that has expired", value: "TokenExchangeExpired" },
+        { text: "Token exchange returns an id_token with the incorrect audience", value: "TokenExchangeInvalidAudience" },
+        { text: "Token exchange returns an id_token with the incorrect issuer", value: "TokenExchangeInvalidIssuer" },
+        { text: "Userinfo returns an identity claim that has expired", value: "UserinfoIdentityClaimExpired" },
+        { text: "Userinfo returns an identity claim with the incorrect audience", value: "UserinfoIdentityClaimInvalidAudience" },
+        { text: "Userinfo returns an identity claim with the incorrect issuer", value: "UserinfoIdentityClaimInvalidIssuer" },
+        { text: "Userinfo returns a server error", value: "UserinfoServerError" },
+        { text: "Userinfo returns invalid JSON", value: "UserinfoInvalidJson" },
+      ];
+
       res.render("authorize", {
         parameters,
         claims: validRequestedClaimNames,
-        userTemplates,
+        userTemplateSelectItems,
+        locSelectItems: locSelectItems,
+        failuresRadioItems,
       });
     }
   });

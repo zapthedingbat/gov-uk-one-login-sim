@@ -3,9 +3,11 @@ import {
   generateKeyPairSync,
   KeyObject,
   JsonWebKey,
+  createPublicKey,
+  createPrivateKey,
 } from "node:crypto";
-import { logger } from "./Logger";
 import { PrivateKeyInfo } from "./types";
+import { readFile, writeFile } from "node:fs/promises";
 
 export interface IPublicKeyStore {
   asJwks(): Array<JsonWebKey>;
@@ -15,10 +17,12 @@ export interface IPrivateKeyStore {
   getPrivateKey(keyId?: string): PrivateKeyInfo;
 }
 
+export type KeyPair = { keyAlg: string; publicKey: KeyObject; privateKey: KeyObject }
+
 export class KeyStore implements IPublicKeyStore, IPrivateKeyStore {
   private _keys: Map<
     string,
-    { keyAlg: string; publicKey: KeyObject; privateKey: KeyObject }
+    KeyPair
   > = new Map();
 
   public asJwks() {
@@ -57,7 +61,7 @@ export class KeyStore implements IPublicKeyStore, IPrivateKeyStore {
     };
   }
 
-  static createKeyPair() {
+  static createKeyPair():KeyPair {
     const { privateKey, publicKey } = generateKeyPairSync("ec", {
       namedCurve: "P-256",
     });
@@ -67,7 +71,30 @@ export class KeyStore implements IPublicKeyStore, IPrivateKeyStore {
       publicKey,
     };
   }
+
+  static async writeKeyPairFile(privateKeyFilePath: string, pair: KeyPair){
+    await writeFile(privateKeyFilePath, pair.privateKey.export({
+      format: "pem",
+      type: "pkcs8"
+    }));
+  }
   
+  static async readKeyPairFile(privateKeyFilePath: string): Promise<KeyPair | undefined>{
+    let privateKeyPem;
+    try{
+      privateKeyPem = await readFile(privateKeyFilePath);
+    } catch (e) {
+      return undefined;
+    }
+    const publicKey = createPublicKey(privateKeyPem);
+    const privateKey = createPrivateKey(privateKeyPem);
+    return {
+      keyAlg: "ES256",
+      publicKey,
+      privateKey,
+    }
+  }
+
   static createKeyId() {
     return randomBytes(32).toString("hex");
   }
