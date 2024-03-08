@@ -1,10 +1,5 @@
 name: Create and publish a Docker image
 
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
 on:
   push:
     branches: [ "main" ]
@@ -27,7 +22,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-     - name: Log in to the Container registry
+      - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
           registry: ${{ env.REGISTRY }}
