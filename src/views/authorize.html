@@ -5,72 +5,82 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-xl">
-        Valid Authorize Request
+        GOV.UK One Login Simulator
       </h1>
+
+      <h2 class="govuk-heading-m">
+        Authorize Request
+      </h2>
 
       <form method="POST" action="/app/submit">
 
+        <table class="govuk-table">
+          <caption class="govuk-table__caption govuk-table__caption--m">Parameters</caption>
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header">Name</th>
+              <th scope="col" class="govuk-table__header">Value</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for name, value in parameters %}
+              <tr class="govuk-table__row">
+                <th scope="row" class="govuk-table__header">{{name}}</th>
+                <td class="govuk-table__cell">
+                  <code>{{value}}</code>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
         {% for name, value in parameters %}
-          {{ govukInput({
-          label: {
-            text: name
-          },
-          name: name,
-          value: value,
-          attributes: { readonly: "readonly" }
-        }) }}
+          <input type="hidden" name="{{name}}" value="{{value}}">
         {% endfor %}
 
-        <h2 class="govuk-heading-m">What result would you like to simulate?</h2>
+        <h3 class="govuk-heading-s">Claims</h3>
 
-        {% call govukFieldset({
-          legend: {
-            text: "Success",
-            classes: "govuk-fieldset__legend--l"
-          }
-        }) %}
+        {% if claims.length > 0 %}
+          <ul class="govuk-list govuk-list--bullet">
+            {% for claim in claims %}
+              <li>{{claim}}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>The authorization request doesn't require any claims</p>
+        {% endif %}
 
-        {{ govukSelect({
+        <h2 class="govuk-heading-m">Result</h3>
+
+        <p>What result would you like to simulate?</h2>
+        
+        {# {{ govukSelect({
           id: "identity",
           name: "identity",
           label: {
             text: "Identity to return"
           },
           items: userTemplateSelectItems
+        }) }} #}
+
+        {{ govukRadios({
+          name: "identity",
+          label: {
+            text: "Identity to return"
+          },
+          items: userTemplateRadioItems
         }) }}
 
-        <h2 class="govuk-heading-m">Identity verification</h2>
-        {% if claims.length > 0 %}
-          <ul class="govuk-list govuk-list--bullet">
-            {% for claim in claims %}
-              <li>{{claim}}</li>
-            {% endfor %}
-
-            {{ govukSelect({
+        {% if hasCoreIdentityClaim > 0 %}
+          {{ govukSelect({
               id: "loc",
               name: "loc",
               label: {
                 text: "Level of confidence to return"
               },
               items: locSelectItems
-            }) }}
-
-          </ul>
-        {% else %}
-          <p>The authorization request doesn't require identity verification</p>
+          }) }}
         {% endif %}
-
-        {% endcall %}
-  
-
-      {% call govukFieldset({
-        legend: {
-          text: "Failure",
-          classes: "govuk-fieldset__legend--l"
-        }
-      }) %}
-
-      <p class="govuk-heading-m">Ensure that your application can gracefully handle failures.</p>
 
         {{ govukRadios({
           name: "action",
@@ -81,8 +91,6 @@
           text: "Continue"
         }) }}
       </form>
-
-      {% endcall %}
 
     </div>
   </div>

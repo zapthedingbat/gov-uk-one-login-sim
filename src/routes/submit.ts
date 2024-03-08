@@ -10,9 +10,9 @@ import { UrlResolver } from "../lib/UrlResolver";
 export default (tokenExchangeStore: ITokenExchangeStore) => {
   return AsyncHandler(async (req: Request, res: Response) => {
     const testBehaviour = req.body.action as TestBehaviour;
-    if(testBehaviour ==="AuthorizeStateMismatch"){
+    if (testBehaviour === "AuthorizeStateMismatch") {
       redirectWithWrongState(req, res);
-    } else{
+    } else {
       tokenExchangeSuccess(req, res, tokenExchangeStore, testBehaviour);
     }
   });

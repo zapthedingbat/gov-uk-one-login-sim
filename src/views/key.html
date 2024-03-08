@@ -5,10 +5,31 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-xl">
-        GOV.UK One Login
+        GOV.UK One Login Simulator
       </h1>
-      <h2>Public key used to sign core identity claim</h2>
-      <pre>{{publicKey}}</pre>
+      <p>
+        If you are using GOV.UK One Login to prove your user's identity, as well as
+        authentication, you will need to use this key to 
+        <a href="https://docs.sign-in.service.gov.uk/integrate-with-integration-environment/prove-users-identity/#validate-your-user-s-identity-credential" target="_blank">verify the
+        core identity claim</a>.
+      </p>
+      {{ govukTextarea({
+        name: "publickey",
+        id: "publickey",
+        label: {
+          text: "Core identity claim public key",
+          classes: "govuk-label--m"
+        },
+        value: publicKey,
+        classes: "govuk-!-font-size-16",
+        hint: {
+          text: "The key is different for each environment."
+        },
+        attributes: { readonly: true }
+      }) }}
+      <p>
+        You can request the key for the integration and production environments from the GOV.UK One Login team.
+      </p>
     </div>
   </div>
 

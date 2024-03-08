@@ -3,6 +3,7 @@ import { ClientConfiguration, ClientRegistration } from "./types";
 
 export interface IClientConfigurations {
   get(clientId: string): ClientConfiguration | undefined;
+  getIds(): Array<string>;
 }
 
 export class ClientConfigurations implements IClientConfigurations {
@@ -40,5 +41,9 @@ export class ClientConfigurations implements IClientConfigurations {
 
   get(clientId: string): ClientConfiguration | undefined {
     return this._configs.get(clientId);
+  }
+
+  getIds(): Array<string>{
+    return Array.from(this._configs.keys());
   }
 }

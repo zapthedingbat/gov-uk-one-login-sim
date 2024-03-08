@@ -17,6 +17,7 @@ import userinfo from "./routes/userinfo";
 import keys from "./routes/keys";
 import { IUserinfoStore, UserinfoStore } from "./lib/UserinfoStore";
 import { TokenExchangeStore } from "./lib/TokenExchangeResponseStore";
+import clients from "./routes/clients";
 
 (async () => {
   const app = express();
@@ -109,6 +110,8 @@ import { TokenExchangeStore } from "./lib/TokenExchangeResponseStore";
 
   // Stub application used to manage the simulation
   app.get("/app/keys", keys(idvKeyPair.publicKey));
+
+  app.get("/app/clients", clients(clientRegistrations));
 
   // Generic error handler
   app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

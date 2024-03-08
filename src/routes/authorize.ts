@@ -289,9 +289,12 @@ export default (clientConfigurations: IClientConfigurations) => {
     }
 
     if (!res.headersSent) {
-      const userTemplateSelectItems = Object.keys(userTemplates).map((key) => ({
+
+      const userTemplateRadioItems = Object.keys(userTemplates).map((key, index) => ({
+        checked: index === 0,
         value: key,
         text: key,
+        conditional: { html: `<pre>${JSON.stringify(userTemplates[key], null, 2)}</pre>`}
       }));
 
       const locSelectItems = requestedLevelsOfConfidence
@@ -299,8 +302,11 @@ export default (clientConfigurations: IClientConfigurations) => {
         .map((loc) => ({ value: loc, text: `${loc} - Requested` }))
         .concat({ value: "P0", text: "P0 - None" });
 
+      const hasCoreIdentityClaim = validRequestedClaimNames && validRequestedClaimNames.includes("https://vocab.account.gov.uk/v1/coreIdentityJWT")
+
       const failuresRadioItems = [
-        { checked: true, text: "Success", value: "Success" },
+        { checked: true, text: "Success", value: "Success"},
+        { divider: "failures" },
         { text: "Return to RP with a state that does not match the authorize parameter", value: "AuthorizeStateMismatch" },
         { text: "Token exchange returns invalid JSON", value: "TokenExchangeInvalidJson" },
         { text: "Token exchange returns a server error", value: "TokenExchangeServerError" },
@@ -308,17 +314,18 @@ export default (clientConfigurations: IClientConfigurations) => {
         { text: "Token exchange returns an id_token that has expired", value: "TokenExchangeExpired" },
         { text: "Token exchange returns an id_token with the incorrect audience", value: "TokenExchangeInvalidAudience" },
         { text: "Token exchange returns an id_token with the incorrect issuer", value: "TokenExchangeInvalidIssuer" },
-        { text: "Userinfo returns an identity claim that has expired", value: "UserinfoIdentityClaimExpired" },
-        { text: "Userinfo returns an identity claim with the incorrect audience", value: "UserinfoIdentityClaimInvalidAudience" },
-        { text: "Userinfo returns an identity claim with the incorrect issuer", value: "UserinfoIdentityClaimInvalidIssuer" },
         { text: "Userinfo returns a server error", value: "UserinfoServerError" },
         { text: "Userinfo returns invalid JSON", value: "UserinfoInvalidJson" },
+        { disabled: !hasCoreIdentityClaim, text: "Userinfo returns an identity claim that has expired", value: "UserinfoIdentityClaimExpired" },
+        { disabled: !hasCoreIdentityClaim, text: "Userinfo returns an identity claim with the incorrect audience", value: "UserinfoIdentityClaimInvalidAudience" },
+        { disabled: !hasCoreIdentityClaim, text: "Userinfo returns an identity claim with the incorrect issuer", value: "UserinfoIdentityClaimInvalidIssuer" },
       ];
 
       res.render("authorize", {
         parameters,
         claims: validRequestedClaimNames,
-        userTemplateSelectItems,
+        hasCoreIdentityClaim,
+        userTemplateRadioItems,
         locSelectItems: locSelectItems,
         failuresRadioItems,
       });
