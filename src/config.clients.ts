@@ -1,6 +1,9 @@
 import { ClientRegistration } from "./lib/types";
+import clients from "../config/clients.json";
+export const clientRegistrations: Array<ClientRegistration> = clients;
 
-export const clientRegistrations: Array<ClientRegistration> = [
+/*
+[
   {
     client_id: "test",
     public_key: `-----BEGIN PUBLIC KEY-----
@@ -19,3 +22,4 @@ export const clientRegistrations: Array<ClientRegistration> = [
     ]
   },
 ];
+*/

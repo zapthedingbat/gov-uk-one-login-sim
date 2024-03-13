@@ -7,7 +7,6 @@ COPY package*.json ./
 RUN npm ci
 
 # Copy everything else and build
-COPY ./public ./public
 COPY ./scripts ./scripts
 COPY ./types ./types
 COPY ./src ./src
@@ -31,10 +30,11 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-COPY --from=build-env /app/dist .
-COPY --from=build-env /app/public .
+COPY --from=build-env /app/dist ./bin
+COPY --from=build-env /app/public ./public
+COPY ./config ./config
 
 ENV NODE_PORT=${NODE_PORT}
 EXPOSE ${NODE_PORT}
 
-ENTRYPOINT ["node", "./server.js"]
+ENTRYPOINT ["node", "./bin/server.js"]

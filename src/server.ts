@@ -28,7 +28,7 @@ import clients from "./routes/clients";
   );
 
   // Load the key pair for signing the identity claim and save it as a file if it's not there
-  const identityVerificationKeyFilepath = process.env.IDV_PRIVATE_KEY_FILE || "idv-private-key.pem";
+  const identityVerificationKeyFilepath = "config/idv-private-key.pem";
   let idvKeyPair = await KeyStore.readKeyPairFile(identityVerificationKeyFilepath);
   if(!idvKeyPair){
     idvKeyPair = KeyStore.createKeyPair();
@@ -40,12 +40,6 @@ import clients from "./routes/clients";
     privateKey: idvKeyPair.privateKey
   }
   
-  const idvPublicKeyPem = idvKeyPair.publicKey.export({
-    format: "pem",
-    type: "spki",
-  });
-  logger.info(`IDV public key \n${idvPublicKeyPem}`);
-
   // Generate some key-pairs
   const keyCount = 3;
   const keyStore = new KeyStore();

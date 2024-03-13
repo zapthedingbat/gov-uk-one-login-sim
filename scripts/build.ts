@@ -20,10 +20,10 @@ const COPY_FILES = [
 
 /** Copy files to dist directory */
 async function copyFiles() {
-  await Promise.all(COPY_FILES.map(({src, dest}) => {
+  for (const { src, dest } of COPY_FILES) {
     console.log(`📁 Copying ${src} to ${dest}`);
-    return cp(src, dest, { recursive: true });
-  }));
+    await cp(src, dest, { recursive: true });
+  }
 }
 
 /** Transpile typescript files to javascript */
@@ -86,10 +86,7 @@ async function transpileStylesheets() {
   console.log(`🧹 Cleaning ${dir}`);
   await rm(dir, { recursive: true, force: true });
 
-  // Run build tasks in parallel
-  await Promise.all([
-    copyFiles(),
-    transpileStylesheets(),
-    transpileTypescript(),
-  ]);
+  await copyFiles();
+  await transpileStylesheets();
+  await transpileTypescript();
 })();

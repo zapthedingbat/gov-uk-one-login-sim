@@ -1,6 +1,10 @@
 import { UserinfoTemplate } from "./lib/types";
+import users from "../config/users.json";
 
-export const userTemplates: { [key: string]: UserinfoTemplate } = {
+export const userTemplates: { [key: string]: UserinfoTemplate } = users;
+
+/*
+{
   KENNETH_DECERQUEIRA: {
     sub: "urn:fdc:gov.uk:2022:56P4CMsGh_02YOlWpd8PAOI-2sVlB2nsNU7mcLZY_ken",
     email: "kenneth.decerqueira@example.com",
@@ -54,3 +58,4 @@ export const userTemplates: { [key: string]: UserinfoTemplate } = {
     },
   },
 };
+*/

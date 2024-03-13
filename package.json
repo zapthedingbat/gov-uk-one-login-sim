@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "private": true,
-  "main": "dist/index.js",
+  "main": "dist/server.js",
   "scripts": {
     "build": "npx ts-node -r dotenv/config ./scripts/build.ts",
     "start": "node -r dotenv/config dist/server.js",
+    "predev": "npm run build",
     "dev": "nodemon --exec \"npx ts-node -r dotenv/config ./src/server.ts\" | npx pino-pretty -S"
   },
   "engines": {
