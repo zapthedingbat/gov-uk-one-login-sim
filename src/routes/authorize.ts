@@ -2,10 +2,10 @@ import { Request, Response } from "express";
 import AsyncHandler from "../lib/AsyncHandler";
 import { IClientConfigurations } from "../lib/ClientConfigurations";
 import { AuthorizeRequestParameters } from "../lib/RequestParameters";
-import { userTemplates } from "../config.users";
-import { ClientConfiguration, TestBehaviour } from "../lib/types";
+import { IUserinfoTemplateStore } from "../lib/UserinfoTemplateStore";
+import { ClientConfiguration } from "../lib/types";
 
-export default (clientConfigurations: IClientConfigurations) => {
+export default (clientConfigurations: IClientConfigurations, userinfoTemplateStore: IUserinfoTemplateStore) => {
   return AsyncHandler(async (req: Request, res: Response) => {
     // Display all the request parameter values on the page,
     // Validate them against the client configuration
@@ -289,13 +289,18 @@ export default (clientConfigurations: IClientConfigurations) => {
     }
 
     if (!res.headersSent) {
-
-      const userTemplateRadioItems = Object.keys(userTemplates).map((key, index) => ({
-        checked: index === 0,
-        value: key,
-        text: key,
-        conditional: { html: `<pre>${JSON.stringify(userTemplates[key], null, 2)}</pre>`}
-      }));
+      const userinfoTemplateIds = await userinfoTemplateStore.getIds();
+      const userTemplateRadioItems = [];
+      for (let index = 0; index < userinfoTemplateIds.length; index++) {
+        const userinfoTemplateId = userinfoTemplateIds[index];
+        const userinfoTemplate = await userinfoTemplateStore.get(userinfoTemplateId);
+        userTemplateRadioItems.push({
+          checked: index === 0,
+          value: userinfoTemplateId,
+          text: userinfoTemplateId,
+          conditional: { html: `<pre>${JSON.stringify(userinfoTemplate, null, 2)}</pre>`}
+        });
+      }
 
       const locSelectItems = requestedLevelsOfConfidence
         .filter((loc) => typeof loc !== "undefined")

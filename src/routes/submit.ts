@@ -1,19 +1,20 @@
 import { Request, Response } from "express";
 import AsyncHandler from "../lib/AsyncHandler";
 import { generateAuthorizationCode } from "../lib/tokens";
-import { UserinfoData, TestBehaviour, TokenExchangeData } from "../lib/types";
+import { UserinfoData, TestBehaviour, TokenExchangeData, UserinfoTemplate } from "../lib/types";
 import { AuthorizeRequestParameters } from "../lib/RequestParameters";
 import { ITokenExchangeStore } from "../lib/TokenExchangeResponseStore";
-import { userTemplates } from "../config.users";
 import { UrlResolver } from "../lib/UrlResolver";
+import { IUserinfoTemplateStore } from "../lib/UserinfoTemplateStore";
 
-export default (tokenExchangeStore: ITokenExchangeStore) => {
+export default (tokenExchangeStore: ITokenExchangeStore, userinfoTemplateStore: IUserinfoTemplateStore) => {
   return AsyncHandler(async (req: Request, res: Response) => {
     const testBehaviour = req.body.action as TestBehaviour;
     if (testBehaviour === "AuthorizeStateMismatch") {
       redirectWithWrongState(req, res);
     } else {
-      tokenExchangeSuccess(req, res, tokenExchangeStore, testBehaviour);
+      const userinfoTemplate = await userinfoTemplateStore.get(req.body.identity); 
+      tokenExchangeSuccess(req, res, tokenExchangeStore, testBehaviour, userinfoTemplate);
     }
   });
 };
@@ -22,11 +23,11 @@ function tokenExchangeSuccess(
   req: Request,
   res: Response,
   tokenExchangeStore: ITokenExchangeStore,
-  testBehaviour: TestBehaviour
+  testBehaviour: TestBehaviour,
+  userTemplate: UserinfoTemplate
 ) {
   const authCode = generateAuthorizationCode();
   const parameters = new AuthorizeRequestParameters(req);
-  const userTemplate = userTemplates[req.body.identity];
   const userinfo: UserinfoData = {
     sub: userTemplate.sub,
   };

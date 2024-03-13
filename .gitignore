@@ -1,9 +1,7 @@
 /node_modules/
 /dist/
-/.keys/
+/public/
 .env
 *.pem
 *.jwk
-/automation/TestData.ts
-/automation/.screenshots/
 .vscode

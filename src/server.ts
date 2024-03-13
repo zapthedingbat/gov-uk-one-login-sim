@@ -1,34 +1,40 @@
 import express, { NextFunction, Request, Response, urlencoded } from "express";
 import path from "node:path";
 import pinoHttp from "pino-http";
-import { clientRegistrations } from "./config.clients";
 import { ClientConfigurations } from "./lib/ClientConfigurations";
 import { ConfigureNunjucks } from "./lib/ConfigureNunjucks";
 import { KeyStore } from "./lib/KeyStore";
 import { logger } from "./lib/Logger";
+import { TokenExchangeStore } from "./lib/TokenExchangeResponseStore";
+import { IUserinfoStore, UserinfoStore } from "./lib/UserinfoStore";
+import { UserinfoTemplateStore } from "./lib/UserinfoTemplateStore";
+import { readClientRegistrations as readClientRegistrations } from "./lib/readClientRegistrations";
 import { PrivateKeyInfo } from "./lib/types";
 import authorize from "./routes/authorize";
+import clients from "./routes/clients";
 import home from "./routes/home";
 import jwks from "./routes/jwks";
+import keys from "./routes/keys";
 import openidConfiguration from "./routes/openid-configuration";
 import submit from "./routes/submit";
 import token from "./routes/token";
 import userinfo from "./routes/userinfo";
-import keys from "./routes/keys";
-import { IUserinfoStore, UserinfoStore } from "./lib/UserinfoStore";
-import { TokenExchangeStore } from "./lib/TokenExchangeResponseStore";
-import clients from "./routes/clients";
 
 (async () => {
   const app = express();
   const port = Number.parseInt(process.env.NODE_PORT || "3000");
+  const clientConfigDir = process.env.CLIENT_CONFIG_DIR || "./config/clients";
+  const userConfigDir = process.env.USER_CONFIG_DIR || "./config/users";
 
-  const clientConfigurations = await ClientConfigurations.Create(
-    clientRegistrations
-  );
+  // TODO: Work out how to update these if the config file changes while the app is running.
+  // currently these will be cached in-process so changing client config will require the app to be restarted
+  const clientRegistrations = await readClientRegistrations(clientConfigDir);
+  const clientConfigurations = await ClientConfigurations.Create(clientRegistrations);
+
+  const userinfoTemplateStore = new UserinfoTemplateStore(userConfigDir);
 
   // Load the key pair for signing the identity claim and save it as a file if it's not there
-  const identityVerificationKeyFilepath = "config/idv-private-key.pem";
+  const identityVerificationKeyFilepath = "./config/keys/idv-private-key.pem";
   let idvKeyPair = await KeyStore.readKeyPairFile(identityVerificationKeyFilepath);
   if(!idvKeyPair){
     idvKeyPair = KeyStore.createKeyPair();
@@ -88,7 +94,7 @@ import clients from "./routes/clients";
   app.get("/.well-known/jwks.json", jwks(keyStore));
 
   // OAuth2 / OIDC authorize endpoint
-  app.get("/authorize", authorize(clientConfigurations));
+  app.get("/authorize", authorize(clientConfigurations, userinfoTemplateStore));
 
   // OIDC token exchange
   app.post(
@@ -100,7 +106,7 @@ import clients from "./routes/clients";
   app.get("/userinfo", userinfo(userinfoStore, idvPrivateKeyInfo));
 
   // Stub application used to manage the simulation
-  app.post("/app/submit", submit(tokenExchangeStore));
+  app.post("/app/submit", submit(tokenExchangeStore, userinfoTemplateStore));
 
   // Stub application used to manage the simulation
   app.get("/app/keys", keys(idvKeyPair.publicKey));
