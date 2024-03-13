@@ -30,11 +30,16 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-COPY --from=build-env /app/dist ./bin
-COPY --from=build-env /app/public ./public
-COPY ./config ./config
+COPY --from=build-env /app/dist /app/bin
+COPY --from=build-env /app/public /app/public
+COPY --chown=app --chmod=777 ./config /app/config
+
+VOLUME /app/config/keys
 
 ENV NODE_PORT=${NODE_PORT}
+ENV USER_CONFIG_DIR="/app/config/users"
+ENV CLIENT_CONFIG_DIR="/app/config/clients"
+
 EXPOSE ${NODE_PORT}
 
 ENTRYPOINT ["node", "./bin/server.js"]

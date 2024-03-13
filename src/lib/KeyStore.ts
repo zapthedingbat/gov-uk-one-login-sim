@@ -7,7 +7,8 @@ import {
   createPrivateKey,
 } from "node:crypto";
 import { PrivateKeyInfo } from "./types";
-import { readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
 
 export interface IPublicKeyStore {
   asJwks(): Array<JsonWebKey>;
@@ -73,6 +74,7 @@ export class KeyStore implements IPublicKeyStore, IPrivateKeyStore {
   }
 
   static async writeKeyPairFile(privateKeyFilePath: string, pair: KeyPair){
+    await mkdir(path.dirname(privateKeyFilePath), {recursive: true});
     await writeFile(privateKeyFilePath, pair.privateKey.export({
       format: "pem",
       type: "pkcs8"
@@ -84,6 +86,7 @@ export class KeyStore implements IPublicKeyStore, IPrivateKeyStore {
     try{
       privateKeyPem = await readFile(privateKeyFilePath);
     } catch (e) {
+      console.log(e);
       return undefined;
     }
     const publicKey = createPublicKey(privateKeyPem);
