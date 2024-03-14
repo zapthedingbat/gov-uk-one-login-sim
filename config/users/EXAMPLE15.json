@@ -1,0 +1,26 @@
+{
+  "sub": "urn:fdc:gov.uk:2022:56P4CMsGh_02YOlWpd8PAOI-2sVlB2nsNU7mcLZY_ex15",
+  "email": "freddie.prince.jnr@example.com",
+  "phone_number": "07700900001",
+  "coreIdentity": {
+    "name": [
+      {
+        "nameParts": [
+          {
+            "value": "FREDDIE",
+            "type": "GivenName"
+          },
+          {
+            "value": "PRINCE JNR",
+            "type": "FamilyName"
+          }
+        ]
+      }
+    ],
+    "birthDate": [
+      {
+        "value": "1980-06-06"
+      }
+    ]
+  }
+}

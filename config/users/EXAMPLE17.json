@@ -1,0 +1,30 @@
+{
+  "sub": "urn:fdc:gov.uk:2022:56P4CMsGh_02YOlWpd8PAOI-2sVlB2nsNU7mcLZY_ex17",
+  "email": "russel.t.davies@example.com",
+  "phone_number": "07700900001",
+  "coreIdentity": {
+    "name": [
+      {
+        "nameParts": [
+          {
+            "value": "RUSSELL",
+            "type": "GivenName"
+          },
+          {
+            "value": "T",
+            "type": "GivenName"
+          },
+          {
+            "value": "DAVIES",
+            "type": "FamilyName"
+          }
+        ]
+      }
+    ],
+    "birthDate": [
+      {
+        "value": "1985-01-23"
+      }
+    ]
+  }
+}
