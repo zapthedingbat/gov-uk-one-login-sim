@@ -1,0 +1,26 @@
+{
+  "sub": "urn:fdc:gov.uk:2022:56P4CMsGh_02YOlWpd8PAOI-2sVlB2nsNU7mcLZY_ex00",
+  "email": "annemarie.williams@example.com@example.com",
+  "phone_number": "07700900001",
+  "coreIdentity": {
+    "name": [
+      {
+        "nameParts": [
+          {
+            "value": "ANNEMARIE",
+            "type": "GivenName"
+          },
+          {
+            "value": "WILLIAMS",
+            "type": "FamilyName"
+          }
+        ]
+      }
+    ],
+    "birthDate": [
+      {
+        "value": "1964-02-29"
+      }
+    ]
+  }
+}

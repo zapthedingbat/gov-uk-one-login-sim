@@ -1,0 +1,26 @@
+{
+  "sub": "urn:fdc:gov.uk:2022:56P4CMsGh_02YOlWpd8PAOI-2sVlB2nsNU7mcLZY_ex03",
+  "email": "david.williamsbrown@example.com",
+  "phone_number": "07700900001",
+  "coreIdentity": {
+    "name": [
+      {
+        "nameParts": [
+          {
+            "value": "DAVID",
+            "type": "GivenName"
+          },
+          {
+            "value": "WILLIAMS BROWN",
+            "type": "FamilyName"
+          }
+        ]
+      }
+    ],
+    "birthDate": [
+      {
+        "value": "1956-03-02"
+      }
+    ]
+  }
+}

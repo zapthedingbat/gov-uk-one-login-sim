@@ -1,0 +1,26 @@
+{
+  "sub": "urn:fdc:gov.uk:2022:56P4CMsGh_02YOlWpd8PAOI-2sVlB2nsNU7mcLZY_ex12",
+  "email": "chloe.smith@example.com",
+  "phone_number": "07700900001",
+  "coreIdentity": {
+    "name": [
+      {
+        "nameParts": [
+          {
+            "value": "CHLOE",
+            "type": "GivenName"
+          },
+          {
+            "value": "SMITH",
+            "type": "FamilyName"
+          }
+        ]
+      }
+    ],
+    "birthDate": [
+      {
+        "value": "1967-09-20"
+      }
+    ]
+  }
+}

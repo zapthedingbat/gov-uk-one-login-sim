@@ -1,0 +1,26 @@
+{
+  "sub": "urn:fdc:gov.uk:2022:56P4CMsGh_02YOlWpd8PAOI-2sVlB2nsNU7mcLZY_ex14",
+  "email": "stephen.moore@example.com",
+  "phone_number": "07700900001",
+  "coreIdentity": {
+    "name": [
+      {
+        "nameParts": [
+          {
+            "value": "STEPHEN",
+            "type": "GivenName"
+          },
+          {
+            "value": "MOORE MBE",
+            "type": "FamilyName"
+          }
+        ]
+      }
+    ],
+    "birthDate": [
+      {
+        "value": "1966-09-03"
+      }
+    ]
+  }
+}
