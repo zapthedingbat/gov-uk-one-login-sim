@@ -1,9 +1,10 @@
-import { readFile, readdir } from "fs/promises";
+import { mkdir, readFile, readdir } from "fs/promises";
 import { ClientRegistration } from "./types";
 import path from "node:path";
 
 export async function readClientRegistrations(clientConfigDir:string): Promise<Array<ClientRegistration>> {
   const registrations: Array<ClientRegistration> = [];
+  await mkdir(clientConfigDir, {recursive: true});
   const dirents = await readdir(clientConfigDir, { withFileTypes: true});
   const jsonFilePaths = dirents.filter(d => d.isFile() && d.name.endsWith(".json"))
   .map(d => path.join(clientConfigDir, d.name));

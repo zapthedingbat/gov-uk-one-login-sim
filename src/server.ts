@@ -23,22 +23,26 @@ import userinfo from "./routes/userinfo";
 (async () => {
   const app = express();
   const port = Number.parseInt(process.env.NODE_PORT || "3000");
-  const clientConfigDir = process.env.CLIENT_CONFIG_DIR || "./config/clients";
-  const userConfigDir = process.env.USER_CONFIG_DIR || "./config/users";
+  const clientConfigDir = "./config/clients";
+  const userConfigDir = "./config/users";
+  const identityVerificationKeyFilepath = "./config/keys/idv-private-key.pem";
 
   // TODO: Work out how to update these if the config file changes while the app is running.
   // currently these will be cached in-process so changing client config will require the app to be restarted
   const clientRegistrations = await readClientRegistrations(clientConfigDir);
   const clientConfigurations = await ClientConfigurations.Create(clientRegistrations);
-
   const userinfoTemplateStore = new UserinfoTemplateStore(userConfigDir);
 
   // Load the key pair for signing the identity claim and save it as a file if it's not there
-  const identityVerificationKeyFilepath = "./config/keys/idv-private-key.pem";
   let idvKeyPair = await KeyStore.readKeyPairFile(identityVerificationKeyFilepath);
   if(!idvKeyPair){
     idvKeyPair = KeyStore.createKeyPair();
     await KeyStore.writeKeyPairFile(identityVerificationKeyFilepath, idvKeyPair);
+    const publicKeyPem = idvKeyPair.publicKey.export({
+      format: "pem",
+      type: "spki"
+    });
+    logger.info({publicKey: publicKeyPem}, "IDV key file was not found. A new key pair was generated and saved. This must be configured in RPs to validate the core identity claim!");
   }
   const idvPrivateKeyInfo: PrivateKeyInfo = {
     keyId: KeyStore.createKeyId(),

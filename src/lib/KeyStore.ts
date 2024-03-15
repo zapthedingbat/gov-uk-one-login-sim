@@ -86,7 +86,6 @@ export class KeyStore implements IPublicKeyStore, IPrivateKeyStore {
     try{
       privateKeyPem = await readFile(privateKeyFilePath);
     } catch (e) {
-      console.log(e);
       return undefined;
     }
     const publicKey = createPublicKey(privateKeyPem);

@@ -30,15 +30,13 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 
+VOLUME /app/config
+
 COPY --from=build-env /app/dist /app/bin
 COPY --from=build-env /app/public /app/public
-COPY --chown=app --chmod=777 ./config /app/config
-
-VOLUME /app/config/keys
+COPY --chown=app:app ./config /app/config
 
 ENV NODE_PORT=${NODE_PORT}
-ENV USER_CONFIG_DIR="/app/config/users"
-ENV CLIENT_CONFIG_DIR="/app/config/clients"
 
 EXPOSE ${NODE_PORT}
 
