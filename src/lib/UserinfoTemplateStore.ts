@@ -1,4 +1,4 @@
-import { readFile, readdir } from "node:fs/promises";
+import { mkdir, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { UserinfoTemplate } from "./types";
 
@@ -15,6 +15,7 @@ export class UserinfoTemplateStore implements IUserinfoTemplateStore {
   }
 
   async getIds(): Promise<string[]> {
+    await mkdir(this.configDirectory, {recursive: true});
     const dirents = await readdir(this.configDirectory, { withFileTypes: true});
     return dirents.filter(d => d.isFile() && d.name.endsWith(".json"))
     .map(d => d.name);
