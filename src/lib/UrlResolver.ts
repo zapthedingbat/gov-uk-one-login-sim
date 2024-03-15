@@ -7,7 +7,8 @@ export class UrlResolver {
   }
   resolve(url: string): string {
     const requestHost = this.request.header("Host");
-    const requestUrl = new URL(`${this.request.protocol}://${requestHost}/${this.request.originalUrl}`);
+    const protocol = this.request.header("X-Forwarded-Proto") || this.request.protocol;
+    const requestUrl = new URL(`${protocol}://${requestHost}/${this.request.originalUrl}`);
     return new URL(url, requestUrl).toString();
   }
 }
