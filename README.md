@@ -36,5 +36,5 @@ docker build -t gov-uk-one-login-sim .
 ### Running the docker image
 
 ```bash
-docker run -it --init -p 3000:8080 gov-uk-one-login-sim
+docker run -v ${PWD}/config:/app/config -p 3000:8080 -it --rm --init gov-uk-one-login-sim
 ```
