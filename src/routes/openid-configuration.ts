@@ -29,7 +29,7 @@ export default () => AsyncHandler(async (req: Request, res: Response) => {
     subject_types_supported: ["public", "pairwise"],
     userinfo_endpoint: urlResolver.resolve("/userinfo"),
     end_session_endpoint: urlResolver.resolve("/logout"),
-    id_token_signing_alg_values_supported: ["ES256"],
+    id_token_signing_alg_values_supported: ["ES256", "RS256"],
     claim_types_supported: ["normal"],
     claims_supported: [
       "sub",
